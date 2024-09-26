@@ -1,23 +1,82 @@
-from flask import Flask, request
 import telebot
+from moviepy.editor import VideoFileClip, CompositeVideoClip, TextClip
+import os
 
 API_TOKEN = '7812256131:AAGuXvvNexwRXizlYszq4_O2VfKx04miT8s'  # Replace with your actual API token
 bot = telebot.TeleBot(API_TOKEN)
 
-app = Flask(__name__)
+# Function to add a watermark to the video
+def add_watermark(input_video_path, output_video_path, watermark_text, chat_id):
+    clip = VideoFileClip(input_video_path)
+    watermark = TextClip(watermark_text, fontsize=24, color='white')
+    watermark = watermark.set_pos(("right", "bottom")).set_duration(clip.duration)
 
-@app.route('/')
-def home():
-    return "Welcome to the Video Watermark Bot API!"
+    final = CompositeVideoClip([clip, watermark])
 
-@app.route('/webhook', methods=['POST'])
-def webhook():
-    json_str = request.get_data(as_text=True)
-    update = telebot.types.Update.de_json(json_str)
-    bot.process_new_updates([update])
-    return '', 200
+    # Define a function to report progress
+    def progress_bar(current, total):
+        percent = (current / total) * 100
+        bot.send_message(chat_id, f"Processing: {percent:.2f}% completed.")
+
+    final.write_videofile(output_video_path, codec="libx264", progress_bar=progress_bar)
+
+# Handler for video or document uploads
+@bot.message_handler(content_types=['video', 'document'])
+def handle_video_or_document(message):
+    # Check if the uploaded document is a video
+    if message.content_type == 'document':
+        file_info = bot.get_file(message.document.file_id)
+        file_extension = os.path.splitext(file_info.file_path)[1].lower()
+
+        # Only proceed if the document is a video file (e.g., .mp4)
+        if file_extension in ['.mp4', '.mov', '.avi', '.mkv']:
+            downloaded_video = f'{message.document.file_id}.mp4'
+            output_video = f'{message.document.file_id}_watermarked.mp4'
+
+            # Download the video from Telegram
+            video_data = bot.download_file(file_info.file_path)
+            with open(downloaded_video, 'wb') as new_file:
+                new_file.write(video_data)
+
+            # Add watermark
+            watermark_text = "@AKLINKSZ"
+            add_watermark(downloaded_video, output_video, watermark_text, message.chat.id)
+
+            # Send back the watermarked video as a document
+            with open(output_video, 'rb') as video:
+                bot.send_document(message.chat.id, video, caption=f"Here is your watermarked video: {message.document.file_id}_watermarked.mp4")
+
+            # Clean up files
+            os.remove(downloaded_video)
+            os.remove(output_video)
+            return
+
+    # Handle video uploads directly
+    elif message.content_type == 'video':
+        video_info = bot.get_file(message.video.file_id)
+        downloaded_video = f'{message.video.file_id}.mp4'
+        output_video = f'{message.video.file_id}_watermarked.mp4'
+
+        # Download the video from Telegram
+        video_data = bot.download_file(video_info.file_path)
+        with open(downloaded_video, 'wb') as new_file:
+            new_file.write(video_data)
+
+        # Add watermark
+        watermark_text = "@AKLINKSZ"
+        add_watermark(downloaded_video, output_video, watermark_text, message.chat.id)
+
+        # Send back the watermarked video as a document
+        with open(output_video, 'rb') as video:
+            bot.send_document(message.chat.id, video, caption=f"Here is your watermarked video: {message.video.file_id}_watermarked.mp4")
+
+        # Clean up files
+        os.remove(downloaded_video)
+        os.remove(output_video)
+
+@bot.message_handler(commands=['start'])
+def start(message):
+    bot.send_message(message.chat.id, "Send me a video or document, and I'll add a watermark to it!")
 
 if __name__ == '__main__':
-    bot.remove_webhook()
-    bot.set_webhook(url='multiple-gabriel-alexpandian1206-d7ad4d52.koyeb.app/webhook')  # Set your Render URL here
-    app.run(host='0.0.0.0', port=8000)  # Change the port to 8000
+    bot.polling()

@@ -52,7 +52,7 @@ def handle_file_name(message):
     thumbnail_image = f'{new_file_name}_thumb.jpg'
     
     # Add watermark
-    watermark_text = "Watermark Text Here"
+    watermark_text = "@AKLINKSZ"
     add_watermark(downloaded_video, output_video, watermark_text)
     
     # Generate thumbnail

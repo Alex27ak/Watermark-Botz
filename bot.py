@@ -4,7 +4,7 @@ from moviepy.video.fx.all import resize
 from PIL import Image
 import os
 
-API_TOKEN = 'YOUR_API_TOKEN'
+API_TOKEN = '7812256131:AAGuXvvNexwRXizlYszq4_O2VfKx04miT8s'
 bot = telebot.TeleBot(API_TOKEN)
 
 # Dictionary to store user video data

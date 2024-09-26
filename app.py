@@ -19,5 +19,5 @@ def webhook():
 
 if __name__ == '__main__':
     bot.remove_webhook()
-    bot.set_webhook(url='multiple-gabriel-alexpandian1206-d7ad4d52.koyeb.app/')  # Set your Render URL here
+    bot.set_webhook(url='multiple-gabriel-alexpandian1206-d7ad4d52.koyeb.app/webhook')  # Set your Render URL here
     app.run(host='0.0.0.0', port=8000)  # Change the port to 8000

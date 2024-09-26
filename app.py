@@ -79,4 +79,6 @@ def start(message):
     bot.send_message(message.chat.id, "Send me a video or document, and I'll add a watermark to it!")
 
 if __name__ == '__main__':
+    # Ensure any existing webhook is deleted
+    bot.remove_webhook()
     bot.polling()

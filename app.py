@@ -6,6 +6,10 @@ bot = telebot.TeleBot(API_TOKEN)
 
 app = Flask(__name__)
 
+@app.route('/')
+def home():
+    return "Welcome to the Video Watermark Bot API!"
+
 @app.route('/webhook', methods=['POST'])
 def webhook():
     json_str = request.get_data(as_text=True)
@@ -15,5 +19,5 @@ def webhook():
 
 if __name__ == '__main__':
     bot.remove_webhook()
-    bot.set_webhook(url='https://watermark-botz.onrender.com')  # Replace with your Render URL
+    bot.set_webhook(url='https://watermark-botz.onrender.com')  # Set your Render URL here
     app.run(host='0.0.0.0', port=5000)  # Change port if necessary
